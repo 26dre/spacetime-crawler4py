@@ -4,8 +4,8 @@ import random
 from typing import Any, Callable
 from globals import (Token, Token_Tuple, HASH, Lock)
 import globals as gb
-from tokenizer import tokenize
 
+PRINTS_ACTIVE: bool = False
 USE_CUSTOM_STRING_HASH: bool = False
 
 MAX_ALLOWED_SIMILARITY = .65
@@ -69,9 +69,11 @@ def make_set_of_n_gram_hashes(tuple_list: list[tuple[Token]]) -> list[HASH]:
 def get_similarity_score(n_gram_hash1: set[HASH], n_gram_hash2: set[HASH]) -> float:
     # returns a score between 0 and 1
     intersection_length: int = len(n_gram_hash1.intersection(n_gram_hash2))
-    print(f'Intersection length = {intersection_length}')
+    if PRINTS_ACTIVE:
+        print(f'Intersection length = {intersection_length}')
     union_length: int = len(n_gram_hash1.union(n_gram_hash2))
-    print(f'union length = {union_length}')
+    if PRINTS_ACTIVE:
+        print(f'union length = {union_length}')
     return intersection_length / union_length
 
 
@@ -91,7 +93,8 @@ def should_evaluate_based_on_n_gram_hash_similarity_thread_safe(possible_new_has
             curr_sim_score = get_similarity_score(
                 n_gram_hash1=n_gram_hash, n_gram_hash2=possible_new_hash)
 
-            print(f'curr sim score = {curr_sim_score}')
+            if PRINTS_ACTIVE:
+                print(f'curr sim score = {curr_sim_score}')
             if curr_sim_score > MAX_ALLOWED_SIMILARITY:
                 should_eval = False
 
@@ -158,25 +161,30 @@ def add_to_n_gram_hashed_list_thread_safe(hash_to_add: set[HASH]) -> bool:
 
 def go_thru_n_grams_phase_thread_safe(token_list: list[Token]):
 
-    print(f'Previous len of hashed-list = {len(N_GRAM_HASHED_LIST)}')
+    if PRINTS_ACTIVE:
+        print(f'Previous len of hashed-list = {len(N_GRAM_HASHED_LIST)}')
     tuple_list: list[Token_Tuple] = n_gram(token_list=token_list)
-    print(f'Tuple list first 10 : {list(tuple_list)[:10]}')
+    if PRINTS_ACTIVE:
+        print(f'Tuple list first 10 : {list(tuple_list)[:10]}')
     hashed_tuple: set[HASH] = make_set_of_n_gram_hashes(tuple_list=tuple_list)
-    print(f'First 10 hashed tuples = {list(hashed_tuple)[:10]}')
+    if PRINTS_ACTIVE:
+        print(f'First 10 hashed tuples = {list(hashed_tuple)[:10]}')
     # should_read = should_eval_n_grammed_tokens_based_on_similarity_thread_safe( hashed_tuple)
     should_read = should_evaluate_based_on_n_gram_hash_similarity_thread_safe(
         hashed_tuple)
 
-    print(f'Should read = {should_read}')
+    if PRINTS_ACTIVE:
+        print(f'Should read = {should_read}')
 
     if should_read:
         add_to_n_gram_hashed_list(hash_to_add=hashed_tuple)
 
-    print(f'New len of hashed-list = {len(N_GRAM_HASHED_LIST)}')
+    if PRINTS_ACTIVE:
+        print(f'New len of hashed-list = {len(N_GRAM_HASHED_LIST)}')
     return should_read
 
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
     # with open('frankestein.txt', 'r') as frankie:
     #     tokenized_frankie = (tokenize(frankie.read()))
 
@@ -195,4 +203,3 @@ if __name__ == '__main__':
 
     # go_thru_n_grams_phase_thread_safe(test_book_tokenized)
     # n_grammed_test_input = n_gram(token_list=tokenized_input)
-    ...

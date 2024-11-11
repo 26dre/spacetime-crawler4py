@@ -10,7 +10,7 @@ from tokenizer import tokenize
 import ngrams
 import link_similarity
 import save_data
-INCLUDE_N_GRAMS_PHASE: bool = False
+INCLUDE_N_GRAMS_PHASE: bool = True
 INCLUDE_URL_SIMILARITY_CHECKING: bool = False
 
 
@@ -224,7 +224,7 @@ def scraper(url, resp):
         return []
 
     globals.unique_urls.add(url)
-    save_data.update_unique_urls()
+    #save_data.update_unique_urls()
 
     # Update subdomains count
     parsed_url = urlparse(url)
@@ -259,7 +259,7 @@ def scraper(url, resp):
 
                 if should_go_thru_website:
                     # Compute word frequencies
-                    globals.update_word_frequencies_thread_safe(filtered_tokens)
+                    #globals.update_word_frequencies_thread_safe(filtered_tokens)
 
                     # Update longest page
                     word_count = len(filtered_tokens)
@@ -267,8 +267,8 @@ def scraper(url, resp):
                         globals.longest_page['word_count'] = word_count
                         globals.longest_page['url'] = url
 
-                        save_data.update_longest_page_wc(word_count)
-                        save_data.update_longest_page_url(url)
+                        # save_data.update_longest_page_wc(word_count)
+                        # save_data.update_longest_page_url(url)
 
             except Exception as e:
                 print(f"Error processing content from {url}: {e}")
