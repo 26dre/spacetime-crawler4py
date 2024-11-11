@@ -73,7 +73,7 @@ def is_valid(url):
                 return False
 
             # Exclude URLs with disallowed file extensions
-            if (re.search(r"/(search|login|logout|api|admin|raw|static|calendar|event)/", path) or
+            if (re.search(r"/(search|login|news|logout|api|admin|raw|static|calendar|event)/", path) or
                 re.search(r"/(page|p)/?\d+", path) or
                 re.search(r"(sessionid|sid|session)=[\w\d]{32}", query) or
                 re.match(
@@ -92,6 +92,13 @@ def is_valid(url):
                         re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", path) or
                         re.search(
                         r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", path)
+                    ):
+                return False
+            
+            if (re.search(r"(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2})", query) or
+                        re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", query) or
+                        re.search(
+                        r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", query)
                     ):
                 return False
 
@@ -147,7 +154,18 @@ def extract_next_links(url, resp):
     links = []
 
     # Check if the response is valid
-    if resp.status != 200 or resp.raw_response is None:
+    try:
+        if not resp or not resp.raw_response.content:
+            print("Early Exit: missing content response.")
+            return links
+        if resp.status and not (200 <= resp.status < 400):
+            print("Early Exit: Invalid URL status")
+            return links
+        if len(resp.raw_response.content) < 400:
+            print("Early Exit: Low information")
+            return links
+    except Exception as e:
+        print(f"Exception occurred {e}")
         return links
 
     # Check if the Content-Type is text/html

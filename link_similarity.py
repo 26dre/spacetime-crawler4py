@@ -1,29 +1,29 @@
 import math
 from operator import __eq__
 import sys
-from typing import Any, Callable, TypeAlias
+#from typing import Any, Callable, TypeAlias
 from globals import url_string
 import globals as gb
 from urllib.parse import urlparse, urljoin, urldefrag, parse_qs
 from test_suite import test_function
 
-parsed_url_dict: TypeAlias = dict
+#parsed_url_dict: TypeAlias = dict
 
 URL_SIMILARITY_THRESHOLD: float = .85
 
 
-def parse_url(url: url_string) -> parsed_url_dict:
-    parsed_url = urlparse(url)
-    return {
-        "scheme": parsed_url.scheme,
-        "netloc": parsed_url.netloc,
-        "path": parsed_url.path,
-        "params": parsed_url.params,
-        "query": parsed_url.query,
-        "fragment": parsed_url.fragment,
-        "hostname": parsed_url.hostname,
-        "port": parsed_url.port
-    }
+# def parse_url(url: url_string) -> parsed_url_dict:
+#     parsed_url = urlparse(url)
+#     return {
+#         "scheme": parsed_url.scheme,
+#         "netloc": parsed_url.netloc,
+#         "path": parsed_url.path,
+#         "params": parsed_url.params,
+#         "query": parsed_url.query,
+#         "fragment": parsed_url.fragment,
+#         "hostname": parsed_url.hostname,
+#         "port": parsed_url.port
+#     }
 
 
 def get_path_similarity(path1_list: list[str], path2_list: list[str]) -> int:
@@ -103,13 +103,13 @@ def get_last_part_of_paths_num_difs(path1: str, path2: str) -> int:
     return get_path_part_differences(path1=path1_list[-1], path2=path2_list[-1])
 
 
-def confirm_similarities_up_to_path(parsed_url1: parsed_url_dict, parsed_url2: parsed_url_dict) -> bool:
-    return (
-        parsed_url1["scheme"] == parsed_url2["scheme"] and
-        parsed_url1["netloc"] == parsed_url2["netloc"] and
-        parsed_url1["hostname"] == parsed_url2["hostname"] and
-        parsed_url1["port"] == parsed_url2["port"]
-    )
+# def confirm_similarities_up_to_path(parsed_url1: parsed_url_dict, parsed_url2: parsed_url_dict) -> bool:
+#     return (
+#         parsed_url1["scheme"] == parsed_url2["scheme"] and
+#         parsed_url1["netloc"] == parsed_url2["netloc"] and
+#         parsed_url1["hostname"] == parsed_url2["hostname"] and
+#         parsed_url1["port"] == parsed_url2["port"]
+#     )
 
 
 # if this is set to 2 there is no additional penalty for the same path + length
@@ -117,13 +117,13 @@ def confirm_similarities_up_to_path(parsed_url1: parsed_url_dict, parsed_url2: p
 NUM_DIFS_PENALTY: int = 1
 
 
-def get_link_similarity(url1: url_string, url2: url_string) -> float:
+# def get_link_similarity(url1: url_string, url2: url_string) -> float:
 
-    parsed_url1: parsed_url_dict = parse_url(url1)
-    parsed_url2: parsed_url_dict = parse_url(url2)
+#     parsed_url1: parsed_url_dict = parse_url(url1)
+#     parsed_url2: parsed_url_dict = parse_url(url2)
 
-    if not confirm_similarities_up_to_path(parsed_url1=parsed_url1, parsed_url2=parsed_url2):
-        return 0
+#     if not confirm_similarities_up_to_path(parsed_url1=parsed_url1, parsed_url2=parsed_url2):
+#         return 0
 
     # if path_similarity_up_to_last()
 
@@ -156,11 +156,11 @@ def get_link_similarity(url1: url_string, url2: url_string) -> float:
     #         / NUM_DIFS_PENALTY
     #     )
 
-    return get_path_similarity_score(path1=parsed_url1['path'], path2=parsed_url2['path'])
+#     return get_path_similarity_score(path1=parsed_url1['path'], path2=parsed_url2['path'])
 
 
-def should_evaluate_url(url1: url_string, url2: url_string, threshold: float = URL_SIMILARITY_THRESHOLD):
-    return get_link_similarity(url1=url1, url2=url2) < threshold
+# def should_evaluate_url(url1: url_string, url2: url_string, threshold: float = URL_SIMILARITY_THRESHOLD):
+#     return get_link_similarity(url1=url1, url2=url2) < threshold
 
 
 MAX_FLOAT_DIF_THRESHOLD: float = .01
@@ -176,58 +176,58 @@ def local_isclose(float1: float, float2: float) -> bool:
     return math.isclose(a=float1, b=float2, rel_tol=MAX_FLOAT_DIF_THRESHOLD)
 
 
-def test_get_link_similarity():
-    print(f"Running in function: {sys._getframe().f_code.co_name}")
-    # result: bool = True
+# def test_get_link_similarity():
+#     print(f"Running in function: {sys._getframe().f_code.co_name}")
+#     # result: bool = True
 
-    test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
-    test_url2: url_string = "https://blogboard.io/blog/knowledge/"
-    test_function(float(1), local_isclose,
-                  get_link_similarity, test_url1, test_url1)
+#     test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
+#     test_url2: url_string = "https://blogboard.io/blog/knowledge/"
+#     test_function(float(1), local_isclose,
+#                   get_link_similarity, test_url1, test_url1)
 
-    test_function(.66, local_isclose, get_link_similarity,
-                  test_url1, test_url2)
+#     test_function(.66, local_isclose, get_link_similarity,
+#                   test_url1, test_url2)
 
-    # running tests with different urls below
-    test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
-    test_url2: url_string = "https://www.youtube.com/results?search_query=reform+part+1"
-    test_function(0, local_isclose, get_link_similarity,
-                  test_url1, test_url2)
+#     # running tests with different urls below
+#     test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
+#     test_url2: url_string = "https://www.youtube.com/results?search_query=reform+part+1"
+#     test_function(0, local_isclose, get_link_similarity,
+#                   test_url1, test_url2)
 
-    test_url1: url_string = "https://sphinx.epic.com/hsch/"
-    test_url2: url_string = "https://epic.com/hsch"
+#     test_url1: url_string = "https://sphinx.epic.com/hsch/"
+#     test_url2: url_string = "https://epic.com/hsch"
 
-    test_function(0, local_isclose, get_link_similarity,
-                  test_url1, test_url2)
+#     test_function(0, local_isclose, get_link_similarity,
+#                   test_url1, test_url2)
 
-    test_url1: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-22/"
-    test_url2: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-23/"
+#     test_url1: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-22/"
+#     test_url2: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-23/"
 
-    test_function(1, local_isclose, get_link_similarity, test_url1, test_url2)
-
-
-def test_should_evaluate_link_based_on_closeness():
-    print(f"Running in function: {sys._getframe().f_code.co_name}")
-
-    test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
-    test_url2: url_string = "https://blogboard.io/blog/knowledge/"
-    test_function(True, __eq__, should_evaluate_url, test_url1, test_url2)
-    test_url1: url_string = "https://stackoverflow.com/questions/16712795/pass-arguments-from-cmd-to-python-script"
-    test_url2: url_string = "https://stackoverflow.com/questions/16712795"
-
-    test_function(True, __eq__, should_evaluate_url, test_url1, test_url2)
-    test_url1: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-22/"
-    test_url2: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-23/"
-
-    test_function(False, __eq__, should_evaluate_url, test_url1, test_url2)
+#     test_function(1, local_isclose, get_link_similarity, test_url1, test_url2)
 
 
-def determine_if_should_evaluate_url_against_set(url_set: set[url_string], possible_new_url: url_string) -> bool:
-    for already_evaluated_url in url_set:
-        if not should_evaluate_url(url1=already_evaluated_url, url2=possible_new_url):
-            return False
+# def test_should_evaluate_link_based_on_closeness():
+#     print(f"Running in function: {sys._getframe().f_code.co_name}")
 
-    return True
+#     test_url1: url_string = "https://blogboard.io/blog/knowledge/python-print-to-stderr/"
+#     test_url2: url_string = "https://blogboard.io/blog/knowledge/"
+#     test_function(True, __eq__, should_evaluate_url, test_url1, test_url2)
+#     test_url1: url_string = "https://stackoverflow.com/questions/16712795/pass-arguments-from-cmd-to-python-script"
+#     test_url2: url_string = "https://stackoverflow.com/questions/16712795"
+
+#     test_function(True, __eq__, should_evaluate_url, test_url1, test_url2)
+#     test_url1: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-22/"
+#     test_url2: url_string = "https://wics.ics.uci.edu/events/category/wics-bonding/day/2013-08-23/"
+
+#     test_function(False, __eq__, should_evaluate_url, test_url1, test_url2)
+
+
+# def determine_if_should_evaluate_url_against_set(url_set: set[url_string], possible_new_url: url_string) -> bool:
+#     for already_evaluated_url in url_set:
+#         if not should_evaluate_url(url1=already_evaluated_url, url2=possible_new_url):
+#             return False
+
+#     return True
 
 
 def go_thru_url_evaluation_phase_thread_safe(possible_new_url: url_string):
@@ -236,11 +236,11 @@ def go_thru_url_evaluation_phase_thread_safe(possible_new_url: url_string):
 
 RUN_SHOULD_EVAL_LINK_TEST: bool = True
 RUN_TEST_GET_LINK_SIMILARITY: bool = True
-if __name__ == "__main__":
+# if __name__ == "__main__":
 
-    if RUN_TEST_GET_LINK_SIMILARITY:
-        test_get_link_similarity()
-    if RUN_SHOULD_EVAL_LINK_TEST:
-        test_should_evaluate_link_based_on_closeness()
+#     if RUN_TEST_GET_LINK_SIMILARITY:
+#         test_get_link_similarity()
+#     if RUN_SHOULD_EVAL_LINK_TEST:
+#         test_should_evaluate_link_based_on_closeness()
 
-    # should return 1 for the next link, passing in the same set of two links
+#     # should return 1 for the next link, passing in the same set of two links
