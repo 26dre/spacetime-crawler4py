@@ -1,11 +1,40 @@
 from threading import Thread
+import os,sys
 
 from inspect import getsource
 from utils.download import download
 from utils import get_logger
 import scraper
 import time
+import globals
 
+filename = 'data.txt'
+
+def saveFile():
+    with open(filename, 'r+') as f:
+        orig_stdout = sys.stdout
+        sys.stdout = f
+        print(f"Total unique pages: {len(globals.unique_urls)}")
+
+        # Print the longest page info
+        print(f"Longest page URL: {globals.longest_page['url']}")
+        print(f"Longest page word count: {globals.longest_page['word_count']}")
+
+        # Print top 50 words
+        sorted_words = sorted(globals.word_frequencies.items(),
+                              key=lambda item: item[1], reverse=True)
+        top_50_words = sorted_words[:50]
+        print("Top 50 words:")
+        for word, freq in top_50_words:
+            print(f"{word}: {freq}")
+
+        # Print subdomains
+        sorted_subdomains = sorted(globals.subdomains.items())
+        print("Subdomains:")
+        for subdomain, count in sorted_subdomains:
+            print(f"{subdomain}, {count}")
+
+        sys.stdout = orig_stdout
 
 class Worker(Thread):
     def __init__(self, worker_id, config, frontier):
@@ -18,10 +47,12 @@ class Worker(Thread):
         super().__init__(daemon=True)
         
     def run(self):
+        count = 0
         while True:
             tbd_url = self.frontier.get_tbd_url()
             if not tbd_url:
                 self.logger.info("Frontier is empty. Stopping Crawler.")
+                saveFile()
                 break
             resp = download(tbd_url, self.config, self.logger)
             self.logger.info(
@@ -32,4 +63,10 @@ class Worker(Thread):
             for scraped_url in scraped_urls:
                 self.frontier.add_url(scraped_url)
             self.frontier.mark_url_complete(tbd_url)
+            
+            count+=1
+            if count >= 100:
+                saveFile()
+                count = 0
+                
             time.sleep(self.config.time_delay)
