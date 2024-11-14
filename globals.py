@@ -12,7 +12,7 @@ allowed_domains = [
     "cs.uci.edu",
     "informatics.uci.edu",
     "stat.uci.edu",
-    "today.uci.edu"
+    "today.uci.edu/department/information_computer_sciences"
 ]
 
 

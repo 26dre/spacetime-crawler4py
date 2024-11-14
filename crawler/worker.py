@@ -11,30 +11,34 @@ import globals
 filename = 'data.txt'
 
 def saveFile():
-    with open(filename, 'r+') as f:
-        orig_stdout = sys.stdout
-        sys.stdout = f
-        print(f"Total unique pages: {len(globals.unique_urls)}")
+    
+    print_out = ""
+    print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
 
-        # Print the longest page info
-        print(f"Longest page URL: {globals.longest_page['url']}")
-        print(f"Longest page word count: {globals.longest_page['word_count']}")
+    # Print the longest page info
+    print_out = f"Longest page URL: {globals.longest_page['url']}\n"
+    print_out = f"Longest page word count: {globals.longest_page['word_count']}\n"
 
-        # Print top 50 words
-        sorted_words = sorted(globals.word_frequencies.items(),
-                              key=lambda item: item[1], reverse=True)
-        top_50_words = sorted_words[:50]
-        print("Top 50 words:")
-        for word, freq in top_50_words:
-            print(f"{word}: {freq}")
+    # Print top 50 words
+    sorted_words = sorted(globals.word_frequencies.items(),
+                            key=lambda item: item[1], reverse=True)
+    top_50_words = sorted_words[:50]
+    print_out += "Top 50 words:\n"
+    for word, freq in top_50_words:
+        print_out += f"{word}: {freq}\n"
 
-        # Print subdomains
-        sorted_subdomains = sorted(globals.subdomains.items())
-        print("Subdomains:")
-        for subdomain, count in sorted_subdomains:
-            print(f"{subdomain}, {count}")
+    # Print subdomains
+    sorted_subdomains = sorted(globals.subdomains.items())
+    print_out += "Subdomains:\n"
+    for subdomain, count in sorted_subdomains:
+        print_out += f"{subdomain}, {count}\n"
+        
+    with open(filename, 'w') as f:    
+        f.write(print_out)
+        
+    print("Data Saved!")
 
-        sys.stdout = orig_stdout
+        
 
 class Worker(Thread):
     def __init__(self, worker_id, config, frontier):
@@ -67,6 +71,5 @@ class Worker(Thread):
             count+=1
             if count >= 100:
                 saveFile()
-                count = 0
-                
+                count = 0  
             time.sleep(self.config.time_delay)

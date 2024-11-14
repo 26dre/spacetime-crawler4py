@@ -10,6 +10,7 @@ from tokenizer import tokenize
 import ngrams
 import link_similarity
 import save_data
+import sys
 INCLUDE_N_GRAMS_PHASE: bool = True
 INCLUDE_URL_SIMILARITY_CHECKING: bool = False
 
@@ -46,12 +47,14 @@ def filter_stop_words(tokens):
 def is_valid(url):
     try:
         # Remove fragment, if any
-        url = urldefrag(url).url
+        url_defrag = urldefrag(url).url
 
-        parsed = urlparse(url)
+        parsed = urlparse(url_defrag)
 
         # Check if the scheme is http or https
-        if parsed.scheme not in {"http", "https"}:
+        if (not parsed.scheme in {"http", "https"} or parsed.hostname is None or parsed.netloc is None
+            or "?" in url or "&" in url
+        ):
             return False
 
         # Extract components
@@ -59,72 +62,81 @@ def is_valid(url):
         path = parsed.path.lower()
         query = parsed.query.lower()
 
-        # Check if the netloc is one of the allowed domains
-        if any(domain in netloc for domain in globals.allowed_domains):
-            # Additional check for today.uci.edu
-            if "today.uci.edu" in netloc:
-                if not path.startswith(globals.today_uci_edu_path):
-                    return False
-
-            # Exclude disallowed domains
-            disallowed_domains = {'gitlab.ics.uci.edu',
-                                  'swiki.ics.uci.edu', 'wiki.ics.uci.edu'}
-            if netloc in disallowed_domains:
-                return False
-
-            # Exclude URLs with disallowed file extensions
-            if (re.search(r"/(search|login|news|logout|api|admin|raw|static|calendar|event)/", path) or
-                re.search(r"/(page|p)/?\d+", path) or
-                re.search(r"(sessionid|sid|session)=[\w\d]{32}", query) or
-                re.match(
-                r".*\.(css|js|bmp|gif|jpe?g|ico"
-                r"|png|tiff?|mid|mp2|mp3|mp4"
-                r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
-                r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
-                r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
-                r"|epub|dll|cnf|tgz|sha1"
-                r"|thmx|mso|arff|rtf|jar|csv"
-                    r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", path)):
-                return False
-
-            # Exclude URLs with dates
-            if (re.search(r"(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2})", path) or
-                        re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", path) or
-                        re.search(
-                        r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", path)
-                    ):
-                return False
-            
-            if (re.search(r"(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2})", query) or
-                        re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", query) or
-                        re.search(
-                        r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", query)
-                    ):
-                return False
-
-            # Exclude URLs with excessive query parameters
-            if len(parse_qs(query)) > 2:
-                return False
-
-            # Exclude URLs with specific query parameters
-            disallowed_params = {'do', 'tab_details',
-                                 'tab_files', 'image', 'ns'}
-            query_params = set(parse_qs(query).keys())
-            if disallowed_params.intersection(query_params):
-                return False
-
-            # Limit the number of query parameters
-            if len(query_params) > 2:
-                return False
-
-            # Exclude URLs with repetitive patterns
-            if has_repetitive_pattern(url):
-                return False
-
-            return True
-        else:
+        if not any(parsed.hostname.endswith(domain) for domain in globals.allowed_domains):
+            return False
+        
+        if any(fragment in url for fragment in ["#comment", "#comments", "#respond", "redirect"]):
             return False
 
+        # Check if the netloc is one of the allowed domains
+        
+            # Additional check for today.uci.edu
+            # if "today.uci.edu" in netloc:
+            #     if not path.startswith(globals.today_uci_edu_path):
+            #         return False
+
+            # Exclude disallowed domains
+        disallowed_domains = {"gitlab.ics.uci.edu",
+                                "swiki.ics.uci.edu", "wiki.ics.uci.edu"}
+        if netloc in disallowed_domains or any(domain in parsed.hostname for domain in disallowed_domains):
+            return False
+        
+
+        if re.match(r"^.*?(/.+?/).*?\1.*$|^.*?/(.+?/)\2.*$", path):
+            return False 
+
+        # Exclude URLs with disallowed file extensions
+        if (re.search(r"/(search|login|news|logout|api|admin|raw|git|static|calendar|event)/", path) or
+            re.search(r"/(page|p)/?\d+", path) or
+            re.search(r"(sessionid|sid|session)=[\w\d]{32}", query) or #maybe add login?
+            re.search(r"p=iot", query) or
+            re.match(
+            r".*\.(css|js|bmp|gif|jpe?g|ico"
+            r"|png|tiff?|mid|mp2|mp3|mp4"
+            r"|wav|avi|mov|mpeg|ram|m4v|mkv|ogg|ogv|pdf"
+            r"|ps|eps|tex|ppt|pptx|doc|docx|xls|xlsx|names"
+            r"|data|dat|exe|bz2|tar|msi|bin|7z|psd|dmg|iso"
+            r"|epub|dll|cnf|tgz|sha1"
+            r"|thmx|mso|arff|rtf|jar|csv"
+                r"|rm|smil|wmv|swf|wma|zip|rar|gz)$", path)):
+            return False
+
+        # Exclude URLs with dates
+        if (re.search(r"(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2})", path) or
+                    re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", path) or
+                    re.search(
+                    r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", path)
+                ):
+            return False
+        
+        if (re.search(r"(?:\d{4}[-\/]\d{1,2}[-\/]\d{1,2})", query) or
+                    re.search(r"(?:\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4})", query) or
+                    re.search(
+                    r"(?:\b(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s\d{1,2},\s\d{4})", query)
+                ):
+            return False
+
+        # Exclude URLs with excessive query parameters
+        if len(parse_qs(query)) > 2:
+            return False
+
+        # Exclude URLs with specific query parameters
+        disallowed_params = {'do', 'tab_details',
+                                'tab_files', 'image', 'ns'}
+        query_params = set(parse_qs(query).keys())
+        if disallowed_params.intersection(query_params):
+            return False
+
+        # Limit the number of query parameters
+        if len(query_params) > 2:
+            return False
+
+        # Exclude URLs with repetitive patterns
+        if has_repetitive_pattern(url):
+            return False
+
+        return True
+        
     except TypeError:
         print("TypeError for ", url)
         return False
@@ -284,10 +296,39 @@ def scraper(url, resp):
 
     return valid_links
 
+filename = 'data.txt'
+
+def saveFile():
+    print_out = ""
+    print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
+
+    # Print the longest page info
+    print_out += f"Longest page URL: {globals.longest_page['url']}\n"
+    print_out += f"Longest page word count: {globals.longest_page['word_count']}\n"
+
+    # Print top 50 words
+    sorted_words = sorted(globals.word_frequencies.items(),
+                            key=lambda item: item[1], reverse=True)
+    top_50_words = sorted_words[:50]
+    print_out += "Top 50 words:\n"
+    for word, freq in top_50_words:
+        print_out += f"{word}: {freq}\n"
+
+    # Print subdomains
+    sorted_subdomains = sorted(globals.subdomains.items())
+    print_out += "Subdomains:\n"
+    for subdomain, count in sorted_subdomains:
+        print_out += f"{subdomain}, {count}\n"
+        
+    with open(filename, 'w') as f:    
+        f.write(print_out)
+        
+    print("Data Saved!")
 
 # Testing purposes:
 if __name__ == "__main__":
     # Print total unique pages
+    saveFile()
     print(f"Total unique pages: {len(globals.unique_urls)}")
 
     # Print the longest page info
