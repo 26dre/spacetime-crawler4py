@@ -86,10 +86,11 @@ def is_valid(url):
             return False 
 
         # Exclude URLs with disallowed file extensions
-        if (re.search(r"/(search|login|news|logout|api|admin|raw|git|static|calendar|event)/", path) or
+        if (re.search(r"/(search|login|news|logout|api|admin|raw|git|pix|static|calendar|event)/", path) or
             re.search(r"/(page|p)/?\d+", path) or
             re.search(r"(sessionid|sid|session)=[\w\d]{32}", query) or #maybe add login?
             re.search(r"p=iot", query) or
+            re.search(r"pix", query) or
             re.match(
             r".*\.(css|js|bmp|gif|jpe?g|ico"
             r"|png|tiff?|mid|mp2|mp3|mp4"
@@ -161,6 +162,27 @@ def has_repetitive_pattern(url):
 
 # Define the function to extract next links from the page
 
+def word_conversion(response_content):
+    try:
+        if isinstance(response_content, bytes):
+            response_content = response_content.decode('utf-8', errors='ignore')
+        # Parse the HTML content
+        soup = BeautifulSoup(response_content, 'html.parser')
+        
+        for style in soup(['script', 'style']):
+            style.decompose()
+        
+        # Extract visible text from the page
+        text = soup.get_text(separator=' ', strip=True)
+
+        # Tokenize the text content
+        tokens = tokenize(text)
+        
+        return tokens
+
+    except Exception as e:
+        print(f"Error processing response content: {e}")
+        return []
 
 def extract_next_links(url, resp):
     links = []
@@ -174,6 +196,9 @@ def extract_next_links(url, resp):
             print("Early Exit: Invalid URL status")
             return links
         if len(resp.raw_response.content) < 400:
+            print("Early Exit: Low information")
+            return links
+        if len(word_conversion(resp.raw_response.content)) <= 100:
             print("Early Exit: Low information")
             return links
     except Exception as e:
@@ -329,22 +354,22 @@ def saveFile():
 if __name__ == "__main__":
     # Print total unique pages
     saveFile()
-    print(f"Total unique pages: {len(globals.unique_urls)}")
+    # print(f"Total unique pages: {len(globals.unique_urls)}")
 
-    # Print the longest page info
-    print(f"Longest page URL: {globals.longest_page['url']}")
-    print(f"Longest page word count: {globals.longest_page['word_count']}")
+    # # Print the longest page info
+    # print(f"Longest page URL: {globals.longest_page['url']}")
+    # print(f"Longest page word count: {globals.longest_page['word_count']}")
 
-    # Print top 50 words
-    sorted_words = sorted(globals.word_frequencies.items(),
-                          key=lambda item: item[1], reverse=True)
-    top_50_words = sorted_words[:50]
-    print("Top 50 words:")
-    for word, freq in top_50_words:
-        print(f"{word}: {freq}")
+    # # Print top 50 words
+    # sorted_words = sorted(globals.word_frequencies.items(),
+    #                       key=lambda item: item[1], reverse=True)
+    # top_50_words = sorted_words[:50]
+    # print("Top 50 words:")
+    # for word, freq in top_50_words:
+    #     print(f"{word}: {freq}")
 
-    # Print subdomains
-    sorted_subdomains = sorted(globals.subdomains.items())
-    print("Subdomains:")
-    for subdomain, count in sorted_subdomains:
-        print(f"{subdomain}, {count}")
+    # # Print subdomains
+    # sorted_subdomains = sorted(globals.subdomains.items())
+    # print("Subdomains:")
+    # for subdomain, count in sorted_subdomains:
+    #     print(f"{subdomain}, {count}")

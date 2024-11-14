@@ -5,38 +5,38 @@ from inspect import getsource
 from utils.download import download
 from utils import get_logger
 import scraper
+from scraper import saveFile
 import time
 import globals
 
 filename = 'data.txt'
 
-def saveFile():
-    
-    print_out = ""
-    print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
+# def saveFile():
+#     print_out = ""
+#     print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
 
-    # Print the longest page info
-    print_out = f"Longest page URL: {globals.longest_page['url']}\n"
-    print_out = f"Longest page word count: {globals.longest_page['word_count']}\n"
+#     # Print the longest page info
+#     print_out += f"Longest page URL: {globals.longest_page['url']}\n"
+#     print_out += f"Longest page word count: {globals.longest_page['word_count']}\n"
 
-    # Print top 50 words
-    sorted_words = sorted(globals.word_frequencies.items(),
-                            key=lambda item: item[1], reverse=True)
-    top_50_words = sorted_words[:50]
-    print_out += "Top 50 words:\n"
-    for word, freq in top_50_words:
-        print_out += f"{word}: {freq}\n"
+#     # Print top 50 words
+#     sorted_words = sorted(globals.word_frequencies.items(),
+#                             key=lambda item: item[1], reverse=True)
+#     top_50_words = sorted_words[:50]
+#     print_out += "Top 50 words:\n"
+#     for word, freq in top_50_words:
+#         print_out += f"{word}: {freq}\n"
 
-    # Print subdomains
-    sorted_subdomains = sorted(globals.subdomains.items())
-    print_out += "Subdomains:\n"
-    for subdomain, count in sorted_subdomains:
-        print_out += f"{subdomain}, {count}\n"
+#     # Print subdomains
+#     sorted_subdomains = sorted(globals.subdomains.items())
+#     print_out += "Subdomains:\n"
+#     for subdomain, count in sorted_subdomains:
+#         print_out += f"{subdomain}, {count}\n"
         
-    with open(filename, 'w') as f:    
-        f.write(print_out)
+#     with open(filename, 'w') as f:    
+#         f.write(print_out)
         
-    print("Data Saved!")
+#     print("Data Saved!")
 
         
 
@@ -73,3 +73,7 @@ class Worker(Thread):
                 saveFile()
                 count = 0  
             time.sleep(self.config.time_delay)
+            
+            
+if __name__ == "__main__":
+    saveFile()
