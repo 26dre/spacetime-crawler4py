@@ -13,7 +13,7 @@ import save_data
 import sys
 INCLUDE_N_GRAMS_PHASE: bool = True
 INCLUDE_URL_SIMILARITY_CHECKING: bool = False
-
+saving_count = 0
 
 # Define the function to filter out stop words
 
@@ -240,6 +240,36 @@ def extract_next_links(url, resp):
     return links
 # Define the main scraper function
 
+filename = 'data.txt'
+
+def saveFile():
+    print_out = ""
+    print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
+
+    # Print the longest page info
+    print_out += f"Longest page URL: {globals.longest_page['url']}\n"
+    print_out += f"Longest page word count: {globals.longest_page['word_count']}\n"
+
+    # Print top 50 words
+    sorted_words = sorted(globals.word_frequencies.items(),
+                            key=lambda item: item[1], reverse=True)
+    top_50_words = sorted_words[:50]
+    print_out += "Top 50 words:\n"
+    for word, freq in top_50_words:
+        print_out += f"{word}: {freq}\n"
+
+    # Print subdomains
+    sorted_subdomains = sorted(globals.subdomains.items())
+    print_out += "Subdomains:\n"
+    for subdomain, count in sorted_subdomains:
+        print_out += f"{subdomain}, {count}\n"
+        
+    with open(filename, 'a') as f:    
+        f.write(print_out)
+        
+    print("Data Saved!")
+
+
 
 def scraper(url, resp):
     global unique_urls, longest_page, subdomains
@@ -271,6 +301,11 @@ def scraper(url, resp):
 
     should_go_thru_website: bool = True
 
+    # if saving_count >= 100:
+    #     saveFile()
+    #     saving_count = 0
+
+    # saving_count += 1
     # Process the page content if the response is valid
     if resp.status == 200 and resp.raw_response is not None:
         content_type = resp.raw_response.headers.get(
@@ -321,38 +356,18 @@ def scraper(url, resp):
 
     return valid_links
 
-filename = 'data.txt'
 
-def saveFile():
-    print_out = ""
-    print_out += f"Total unique pages: {len(globals.unique_urls)}\n"
-
-    # Print the longest page info
-    print_out += f"Longest page URL: {globals.longest_page['url']}\n"
-    print_out += f"Longest page word count: {globals.longest_page['word_count']}\n"
-
-    # Print top 50 words
-    sorted_words = sorted(globals.word_frequencies.items(),
-                            key=lambda item: item[1], reverse=True)
-    top_50_words = sorted_words[:50]
-    print_out += "Top 50 words:\n"
-    for word, freq in top_50_words:
-        print_out += f"{word}: {freq}\n"
-
-    # Print subdomains
-    sorted_subdomains = sorted(globals.subdomains.items())
-    print_out += "Subdomains:\n"
-    for subdomain, count in sorted_subdomains:
-        print_out += f"{subdomain}, {count}\n"
-        
-    with open(filename, 'w') as f:    
-        f.write(print_out)
-        
-    print("Data Saved!")
 
 # Testing purposes:
 if __name__ == "__main__":
     # Print total unique pages
+    
+    test_str = '<html><head>\r\n<title>Sara on deck</title>\r\n</head>\r\n<body bgcolor=\"#ffffff\" text=\"#000000\">\r\n<div align=\"center\">\r\n<table width=\"95%\" cellspacing=\"5\">\r\n<tbody><tr><td align=\"left\" width=\"30%\"><a href=\"Darya2nd.html\">Prev: Darya reaches second</a></td>\r\n<td align=\"center\" width=\"30%\"><a href=\"index.html\">Up: Poison Ivy vs. Blue Angels</a></td>\r\n<td align=\"right\" width=\"30%\"><a href=\"CrystalCarrying3rd.html\">Next: Crystal helps pick up the bases</a></td>\r\n</tr></tbody></table>\r\n<h2>Sara on deck</h2>\r\n<img src=\"SaraOnDeck-m.jpg\" width=\"448\" height=\"672\" alt=\"Sara on deck\"><br><br>\r\n\r\n<h5>Taken Wednesday, April 23, 2003, 06:50:40pm.&nbsp; Original image size: 2048x3072, 5.5Mb<br>\r\nTechnical details: Canon EOS D60, 1/125s @ F4.0, ISO 100, 70-200mm/F2.8+1.4x @ 280mm (448mm equiv)<br>\r\nPS7 CRW 4700:-5, 0:10:40:45:0:25:5+M</h5>\r\n</div>\r\n</body></html>'
+    
+    if len(word_conversion(test_str)) <= 100:
+        print("Early Exit: Low information")
+    print(len(word_conversion(test_str)))
+    print(word_conversion(test_str))
     saveFile()
     # print(f"Total unique pages: {len(globals.unique_urls)}")
 
