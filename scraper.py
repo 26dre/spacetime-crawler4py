@@ -331,7 +331,7 @@ def scraper(url, resp):
 
                 if should_go_thru_website:
                     # Compute word frequencies
-                    #globals.update_word_frequencies_thread_safe(filtered_tokens)
+                    globals.update_word_frequencies_thread_safe(filtered_tokens)
 
                     # Update longest page
                     word_count = len(filtered_tokens)

@@ -156,7 +156,7 @@ def update_word_frequencies(tokens: list[Token]):
 
     for token in tokens:
         word_frequencies[token] += 1
-        save_data.update_word_frequencies(token)
+        # save_data.update_word_frequencies(token)
 
 
 def update_word_frequencies_thread_safe(tokens: list[Token]):
