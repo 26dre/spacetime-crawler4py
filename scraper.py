@@ -11,34 +11,42 @@ import ngrams
 import link_similarity
 import save_data
 import sys
+import nltk
+from nltk.corpus import stopwords
+
 INCLUDE_N_GRAMS_PHASE: bool = True
 INCLUDE_URL_SIMILARITY_CHECKING: bool = False
 saving_count = 0
 
 # Define the function to filter out stop words
-
+nltk.download('stopwords', quiet=True)
 
 def filter_stop_words(tokens):
     # Define a list of English stop words
     stop_words = set([
-        'a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an',
+        'a', 'about', 'above', 'after', 'again', 'against', 'all', 'also', 'am', 'an',
         'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before',
-        'being', 'below', 'between', 'both', 'but', 'by', 'could', 'did', 'do',
+        'being', 'below', 'between', 'both', 'but', 'by', 'can', 'could', 'did', 'do',
         'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from',
         'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers',
         'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into',
-        'is', 'it', "it's", 'its', 'itself', 'just', 'me', 'more', 'most',
+        'is', 'it', "it's", 'its', 'itself', 'just', 'may', 'me', 'more', 'most',
         'my', 'myself', 'no', 'nor', 'not', 'of', 'off', 'on', 'once', 'only',
         'or', 'other', 'our', 'ours', 'ourselves', 'out', 'over', 'own', 's',
         'same', 'she', "she's", 'should', 'so', 'some', 'such', 't', 'than',
         'that', "that's", 'the', 'their', 'theirs', 'them', 'themselves',
         'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to',
-        'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what',
+        'too', 'under', 'until', 'up', 'use', 'very', 'was', 'we', 'were', 'what',
         'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with',
         'you', 'your', 'yours', 'yourself', 'yourselves'
     ])
+    nltk_stop_word = set(stopwords.words('english'))
+    stop_words.update(nltk_stop_word)
 
     filtered_tokens = [token for token in tokens if token not in stop_words]
+    #Added stop word library as well
+    
+    #filtered_tokens = [word for word in filtered_tokens_1 if word.lower() not in nltk_stop_word]
     return filtered_tokens
 
 # Define the is_valid function to filter URLs
@@ -77,7 +85,7 @@ def is_valid(url):
 
             # Exclude disallowed domains
         disallowed_domains = {"gitlab.ics.uci.edu",
-                                "swiki.ics.uci.edu", "wiki.ics.uci.edu"}
+                                "swiki.ics.uci.edu", "wiki.ics.uci.edu", "cecs.uci.edu"}
         if netloc in disallowed_domains or any(domain in parsed.hostname for domain in disallowed_domains):
             return False
         
@@ -363,11 +371,17 @@ if __name__ == "__main__":
     # Print total unique pages
     
     test_str = '<html><head>\r\n<title>Sara on deck</title>\r\n</head>\r\n<body bgcolor=\"#ffffff\" text=\"#000000\">\r\n<div align=\"center\">\r\n<table width=\"95%\" cellspacing=\"5\">\r\n<tbody><tr><td align=\"left\" width=\"30%\"><a href=\"Darya2nd.html\">Prev: Darya reaches second</a></td>\r\n<td align=\"center\" width=\"30%\"><a href=\"index.html\">Up: Poison Ivy vs. Blue Angels</a></td>\r\n<td align=\"right\" width=\"30%\"><a href=\"CrystalCarrying3rd.html\">Next: Crystal helps pick up the bases</a></td>\r\n</tr></tbody></table>\r\n<h2>Sara on deck</h2>\r\n<img src=\"SaraOnDeck-m.jpg\" width=\"448\" height=\"672\" alt=\"Sara on deck\"><br><br>\r\n\r\n<h5>Taken Wednesday, April 23, 2003, 06:50:40pm.&nbsp; Original image size: 2048x3072, 5.5Mb<br>\r\nTechnical details: Canon EOS D60, 1/125s @ F4.0, ISO 100, 70-200mm/F2.8+1.4x @ 280mm (448mm equiv)<br>\r\nPS7 CRW 4700:-5, 0:10:40:45:0:25:5+M</h5>\r\n</div>\r\n</body></html>'
-    
-    if len(word_conversion(test_str)) <= 100:
-        print("Early Exit: Low information")
-    print(len(word_conversion(test_str)))
+    soup = BeautifulSoup(test_str, 'lxml')
+    text = soup.get_text(separator=' ', strip=True)
+    tokenized = tokenize(text)
+    test_filter = filter_stop_words(tokenized)
+    # if len(word_conversion(test_filter)) <= 100:
+    #     print("Early Exit: Low information")
+    #print(len(word_conversion(test_str)))
+
     print(word_conversion(test_str))
+    print()
+    print(test_filter)
     saveFile()
     # print(f"Total unique pages: {len(globals.unique_urls)}")
 

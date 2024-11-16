@@ -155,6 +155,8 @@ def update_word_frequencies(tokens: list[Token]):
     global word_frequencies
 
     for token in tokens:
+        if len(token) < 3:
+            continue 
         word_frequencies[token] += 1
         # save_data.update_word_frequencies(token)
 
